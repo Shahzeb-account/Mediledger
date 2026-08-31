@@ -1,0 +1,287 @@
+====================================================================
+MediLedger - Healthcare Blockchain System
+How to Run This Project Locally on a New Laptop
+====================================================================
+
+This guide assumes a fresh Windows laptop with nothing installed yet.
+Follow the steps in order. Each step tells you exactly what to type.
+
+
+--------------------------------------------------------------------
+STEP 0: WHAT YOU NEED TO INSTALL FIRST (one-time setup)
+--------------------------------------------------------------------
+
+1. Node.js (for the blockchain and frontend)
+   - Go to https://nodejs.org
+   - Download the LTS version (Windows Installer, 64-bit)
+   - Run the installer, keep all default options
+   - IMPORTANT: after installing, close ALL open Command Prompt
+     windows and open a brand new one before continuing
+   - Verify it worked:
+       node -v
+       npm -v
+     Both should print a version number. If you see
+     "not recognized", Node did not install correctly or your
+     PATH was not updated - reinstall and restart your PC.
+
+2. Python (for the backend)
+   - Go to https://www.python.org/downloads
+   - Download Python 3.13 (or the latest 3.x version)
+   - During install, TICK THE BOX "Add python.exe to PATH"
+     before clicking Install - this step is easy to miss
+   - Verify it worked:
+       python --version
+       pip --version
+
+3. A code editor (optional but helpful)
+   - VS Code (https://code.visualstudio.com) is recommended for
+     viewing/editing files, but Notepad works fine too.
+
+
+--------------------------------------------------------------------
+STEP 1: GET THE PROJECT FILES ONTO THE NEW LAPTOP
+--------------------------------------------------------------------
+
+1. Copy the entire "healthcare-blockchain-system" folder onto the
+   new laptop (e.g. via USB drive, cloud storage, or extracting the
+   zip file) to a simple path such as:
+       D:\healthcare-blockchain-system
+
+2. Delete these folders if they exist inside it (they are large,
+   machine-specific, and will be rebuilt automatically):
+       D:\healthcare-blockchain-system\blockchain\node_modules
+       D:\healthcare-blockchain-system\frontend\node_modules
+       D:\healthcare-blockchain-system\backend\venv
+
+   (If they were excluded when the project was zipped, you will
+   not see them at all - that is fine, they get created below.)
+
+
+--------------------------------------------------------------------
+STEP 2: SET UP THE BLOCKCHAIN (SMART CONTRACT)
+--------------------------------------------------------------------
+
+Open Command Prompt and run these commands one line at a time
+(do not paste multiple lines at once - type or paste one line,
+press Enter, wait for it to finish, then the next):
+
+    cd /d D:\healthcare-blockchain-system\blockchain
+    npm install
+
+Wait for this to finish (it may take a few minutes and show some
+warnings about vulnerabilities - those are safe to ignore).
+
+
+--------------------------------------------------------------------
+STEP 3: SET UP THE BACKEND (PYTHON / FLASK)
+--------------------------------------------------------------------
+
+In a NEW Command Prompt window:
+
+    cd /d D:\healthcare-blockchain-system\backend
+    python -m venv venv
+    venv\Scripts\activate
+    pip install -r requirements.txt
+
+NOTE: the requirements.txt file may contain a line for "pywin32"
+which only installs on Windows - if you are on Windows this is
+fine. If any single package fails to install, remove that one
+line from requirements.txt and try again; the project uses
+Flask, Flask-SQLAlchemy, web3.py, python-dotenv, cryptography,
+pycryptodome, boto3, and Flask-CORS as its core dependencies.
+
+Check that a file named ".env" exists in the backend folder:
+    D:\healthcare-blockchain-system\backend\.env
+
+This file holds configuration such as the storage provider and
+encryption key. If it is missing, copy it over from the original
+machine - do not create a new one from scratch, since it must
+contain the same ENCRYPTION_KEY value used when records were
+first uploaded (otherwise old encrypted files cannot be read).
+
+IMPORTANT SECURITY NOTE: the .env file contains real secrets
+(Backblaze B2 credentials, encryption key). Never upload it
+anywhere public (GitHub, forums, etc.).
+
+
+--------------------------------------------------------------------
+STEP 4: SET UP THE FRONTEND (REACT)
+--------------------------------------------------------------------
+
+In a NEW Command Prompt window:
+
+    cd /d D:\healthcare-blockchain-system\frontend
+    npm install
+
+Wait for this to finish.
+
+
+--------------------------------------------------------------------
+STEP 5: RUNNING THE PROJECT (every time you want to use it)
+--------------------------------------------------------------------
+
+You need FOUR separate Command Prompt windows running at the same
+time. Do not close any of them while using the app.
+
+--- WINDOW 1: Blockchain node (start this FIRST, leave it open) ---
+
+    cd /d D:\healthcare-blockchain-system\blockchain
+    npx hardhat node
+
+Wait until it prints a list of 20 test accounts with their
+private keys. This window must stay open for the entire session -
+closing it wipes the entire blockchain and every registered user
+and uploaded record. If you ever see the error
+"EADDRINUSE: address already in use 127.0.0.1:8545" it just means
+this window is already running somewhere else - that is fine,
+you do not need to start a second one.
+
+--- WINDOW 2: Deploy the smart contract (run once per session) ---
+
+Open a NEW Command Prompt window (do not touch Window 1):
+
+    cd /d D:\healthcare-blockchain-system\blockchain
+    npx hardhat ignition deploy ignition/modules/HealthcareDataSharing.ts --network localhost
+
+IMPORTANT: the --network localhost part is required. If you leave
+it out or use --network hardhatMainnet instead, Hardhat deploys to
+a temporary throwaway chain instead of the real one in Window 1,
+and nothing will work.
+
+This prints a "Deployed Addresses" line with a contract address
+like 0xe7f1725.... Copy this address - if it is DIFFERENT from
+the address already saved in the project's config files
+(backend\.env and backend\app\blockchain.py), you must update
+both files to match, or the backend will not be able to talk to
+the contract. On a fresh laptop with a fresh Hardhat node, the
+address is usually the same every time as long as the contract
+code has not changed, but it is worth double-checking.
+
+You can close this window once the deploy finishes - it does not
+need to stay open.
+
+--- WINDOW 3: Backend (Flask/Python) ---
+
+Open a NEW Command Prompt window:
+
+    cd /d D:\healthcare-blockchain-system\backend
+    venv\Scripts\activate
+    python run.py
+
+You should see "Running on http://127.0.0.1:5001" with no red
+error text. Leave this window open while using the app.
+
+If you see "ConnectionError: Cannot connect to the Hardhat
+blockchain", it means Window 1 is not running - go back and
+start it.
+
+--- WINDOW 4: Frontend (React) ---
+
+Open a NEW Command Prompt window:
+
+    cd /d D:\healthcare-blockchain-system\frontend
+    npm run dev
+
+You should see a line like "Local: http://localhost:5173/".
+Leave this window open.
+
+--- USING THE APP ---
+
+Open a web browser and go to:
+    http://localhost:5173
+
+You can register a new account (choose Patient, Doctor, or
+Researcher) and either log in with your assigned wallet address
+or with an email + password you set during registration.
+
+
+--------------------------------------------------------------------
+STEP 6: SHUTTING DOWN
+--------------------------------------------------------------------
+
+When you are done, you can close all four Command Prompt windows.
+Closing Window 1 (the blockchain node) will erase all registered
+users and uploaded records for that session, since it only exists
+in memory - this is expected behaviour for local development and
+is not a bug. To start a fresh session next time, simply repeat
+Steps 5.1 through 5.4 in order.
+
+
+--------------------------------------------------------------------
+COMMON PROBLEMS AND FIXES
+--------------------------------------------------------------------
+
+Problem: "npm" or "npx" or "node" is not recognized
+Fix: Node.js is not installed, or was installed before you opened
+this Command Prompt window. Close this window, open a brand new
+one, and try again. If it still fails, reinstall Node.js and
+restart the computer.
+
+Problem: "python" is not recognized
+Fix: Python was not added to PATH during install. Reinstall
+Python and make sure to tick "Add python.exe to PATH".
+
+Problem: "EADDRINUSE: address already in use 127.0.0.1:8545"
+Fix: This is not an error - it means the Hardhat node from
+Window 1 is already running somewhere. Leave it as is.
+
+Problem: Registration fails with "No unused Hardhat accounts
+are available" or similar
+Fix: The local database already has profiles using all 20 test
+wallet addresses (usually from previous testing sessions). Stop
+the backend (Window 3), rename
+backend\instance\mediledger.db to mediledger.db.old, then
+restart the backend - a fresh empty database will be created
+automatically. Note this means all previous test users and
+records will need to be re-registered/re-uploaded.
+
+Problem: Backend crashes with a blockchain ConnectionError
+Fix: Window 1 (Hardhat node) is not running or was closed. Start
+it again, then redeploy the contract (Window 2), then restart
+the backend (Window 3).
+
+Problem: Uploaded files from a previous session cannot be
+downloaded/decrypted after moving to a new laptop
+Fix: Make sure the .env file (specifically the ENCRYPTION_KEY
+value) was copied over exactly from the original machine and not
+regenerated. Files encrypted under one key cannot be decrypted
+with a different key.
+
+Problem: cmd shows the wrong folder after typing "cd D:\..."
+Fix: Plain "cd" does not switch drives in Command Prompt. Always
+use "cd /d D:\path\to\folder" (with the /d flag) when moving to
+a different drive letter than the one you started in.
+
+Important note: I am runnung this app in local disk D. 
+if you are running this app in any othe drive than while entering
+the path in terminal you have tou write you loal disk path
+
+like if you are using drive E the you path will be 
+ cd /d E:\healthcare-blockchain-system\backend
+
+--------------------------------------------------------------------
+QUICK REFERENCE: THE FOUR STARTUP COMMANDS
+--------------------------------------------------------------------
+
+Window 1 (leave running):
+    cd /d D:\healthcare-blockchain-system\blockchain
+    npx hardhat node
+
+Window 2 (run once, then can close):
+    cd /d D:\healthcare-blockchain-system\blockchain
+    npx hardhat ignition deploy ignition/modules/HealthcareDataSharing.ts --network localhost
+
+Window 3 (leave running):
+    cd /d D:\healthcare-blockchain-system\backend
+    venv\Scripts\activate
+    python run.py
+
+Window 4 (leave running):
+    cd /d D:\healthcare-blockchain-system\frontend
+    npm run dev
+
+Then open a browser to: http://localhost:5173
+
+====================================================================
+END OF GUIDE
+====================================================================

@@ -1,0 +1,57 @@
+# ==============================
+# Environment / Secrets
+# ==============================
+.env
+.env.*
+*.key
+*.pem
+*.secret
+
+# ==============================
+# Python
+# ==============================
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# ==============================
+# Local databases
+# ==============================
+*.db
+*.db.old
+*.db.old*
+backend/instance/
+
+# ==============================
+# Generated / runtime storage
+# ==============================
+backend/storage/
+backend/storage_old_personal_files/
+
+# ==============================
+# Node
+# ==============================
+node_modules/
+
+# ==============================
+# Frontend build output
+# ==============================
+frontend/dist/
+
+# ==============================
+# Blockchain generated deployment data
+# ==============================
+blockchain/ignition/deployments/
+
+# ==============================
+# IDE
+# ==============================
+.vscode/
+.idea/
+
+# ==============================
+# OS
+# ==============================
+.DS_Store
+Thumbs.db
